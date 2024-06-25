@@ -135,9 +135,12 @@ class SmartIRClimate(ClimateEntity, RestoreEntity):
 
         self._unit = hass.config.units.temperature_unit
         if self._unit == TEMP_FAHRENHEIT:
+            _LOGGER.warning("SmartIRClimate: using Fahrenheit")
             self._min_temperature = self._celsius_to_fahrenheit(self._min_temperature)
             self._max_temperature = self._celsius_to_fahrenheit(self._max_temperature)
-        
+        else:
+            _LOGGER.warning("SmartIRClimate: using Celsius")
+
         #Supported features
         self._support_flags = SUPPORT_FLAGS
         self._support_swing = False
