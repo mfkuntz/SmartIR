@@ -11,7 +11,7 @@ from homeassistant.components.climate.const import (
     ClimateEntityFeature, HVACMode, HVAC_MODES, ATTR_HVAC_MODE)
 from homeassistant.const import (
     CONF_NAME, STATE_ON, STATE_OFF, STATE_UNKNOWN, STATE_UNAVAILABLE, ATTR_TEMPERATURE,
-    PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE)
+    PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE, TEMP_FAHRENHEIT)
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
@@ -135,6 +135,12 @@ class SmartIRClimate(ClimateEntity, RestoreEntity):
         self._current_humidity = None
 
         self._unit = hass.config.units.temperature_unit
+        if self._unit == TEMP_FAHRENHEIT:
+            _LOGGER.warning("SmartIRClimate: using Fahrenheit")
+            self._min_temperature = self._celsius_to_fahrenheit(self._min_temperature)
+            self._max_temperature = self._celsius_to_fahrenheit(self._max_temperature)
+        else:
+            _LOGGER.warning("SmartIRClimate: using Celsius")
         
         #Supported features
         self._support_flags = SUPPORT_FLAGS
@@ -296,6 +302,12 @@ class SmartIRClimate(ClimateEntity, RestoreEntity):
             'commands_encoding': self._commands_encoding
         }
 
+    def _celsius_to_fahrenheit(self, temperature):
+        return round(temperature * 9 / 5) + 32
+
+    def _fahrenheit_to_celsius(self, temperature):
+        return round((temperature - 32) * 5 / 9)
+
     async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
         hvac_mode = kwargs.get(ATTR_HVAC_MODE)  
@@ -308,10 +320,14 @@ class SmartIRClimate(ClimateEntity, RestoreEntity):
             _LOGGER.warning('The temperature value is out of min/max range') 
             return
 
+        target_temperature = temperature
+        if self._unit == TEMP_FAHRENHEIT:
+            target_temperature = '{0:g}'.format(self._fahrenheit_to_celsius(self._target_temperature))
+
         if self._precision == PRECISION_WHOLE:
-            self._target_temperature = round(temperature)
+            self._target_temperature = round(target_temperature)
         else:
-            self._target_temperature = round(temperature, 1)
+            self._target_temperature = round(target_temperature, 1)
 
         if hvac_mode:
             await self.async_set_hvac_mode(hvac_mode)
