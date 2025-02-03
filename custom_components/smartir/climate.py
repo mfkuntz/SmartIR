@@ -323,7 +323,7 @@ class SmartIRClimate(ClimateEntity, RestoreEntity):
         target_temperature = temperature
         if self._unit == UnitOfTemperature.FAHRENHEIT:
             target_temperature = self._fahrenheit_to_celsius(target_temperature)
-            _LOGGER.warning(f"SmartIRClimate: converting Fahrenheit {temperature:.2f} to Celsius {target_temperature:.2f}")
+            _LOGGER.debug(f"SmartIRClimate: converting Fahrenheit {temperature:.2f} to Celsius {target_temperature:.2f}")
 
         if self._precision == PRECISION_WHOLE:
             self._target_temperature = round(target_temperature)
