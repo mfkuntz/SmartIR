@@ -321,9 +321,6 @@ class SmartIRClimate(ClimateEntity, RestoreEntity):
             return
 
         target_temperature = temperature
-        if self._unit == UnitOfTemperature.FAHRENHEIT:
-            target_temperature = self._fahrenheit_to_celsius(target_temperature)
-            _LOGGER.debug(f"SmartIRClimate: converting Fahrenheit {temperature:.2f} to Celsius {target_temperature:.2f}")
 
         if self._precision == PRECISION_WHOLE:
             self._target_temperature = round(target_temperature)
@@ -383,7 +380,13 @@ class SmartIRClimate(ClimateEntity, RestoreEntity):
                 operation_mode = self._hvac_mode
                 fan_mode = self._current_fan_mode
                 swing_mode = self._current_swing_mode
-                target_temperature = '{0:g}'.format(self._target_temperature)
+
+                temperature = self._target_temperature
+                if self._unit == UnitOfTemperature.FAHRENHEIT:
+                    temperature = self._fahrenheit_to_celsius(temperature)
+                    _LOGGER.debug(f"SmartIRClimate: converting Fahrenheit {self._target_temperature:.2f} to Celsius {temperature:.2f}")
+
+                target_temperature = '{0:g}'.format(temperature)
 
                 if operation_mode.lower() == HVACMode.OFF:
                     await self._controller.send(self._commands['off'])
